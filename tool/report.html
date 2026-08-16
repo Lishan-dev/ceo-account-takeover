@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Executive Account Guardian - Findings Report</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#0f1115; color:#e8e8e8; margin:0; padding:32px; }
+  h1 { font-size: 22px; margin-bottom:4px; }
+  .subtitle { color:#9aa0a6; margin-bottom:24px; font-size:13px; }
+  .risk-cards { display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .risk-card { background:#181b21; border:1px solid #2a2e36; border-radius:8px; padding:14px 18px; min-width:180px; }
+  .risk-card .user { font-weight:600; font-size:14px; }
+  .risk-card .score { font-size:26px; font-weight:700; margin-top:4px; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #22262e; font-size:13px; vertical-align:top; }
+  th { color:#9aa0a6; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; }
+  .sev { display:inline-block; padding:2px 8px; border-radius:4px; color:white; font-size:11px; font-weight:600; }
+  .evidence { color:#9aa0a6; font-family: ui-monospace, Menlo, monospace; font-size:11px; white-space:pre-wrap; }
+  .empty { color:#9aa0a6; padding:24px; text-align:center; }
+</style>
+</head>
+<body>
+  <h1>Executive Account Guardian &mdash; Findings Report</h1>
+  <div class="subtitle">Generated 2026-08-16 00:52 &middot; 5 finding(s) across 1 account(s)</div>
+
+  <div class="risk-cards">
+    <div class="risk-card">
+  <div class="user">ceo@fictionalcorp.com</div>
+  <div class="score" style="color:#e05a3a">100/100</div>
+</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Severity</th><th>Category</th><th>User</th><th>Timestamp</th><th>Detail</th><th>Evidence</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+  <td><span class="sev" style="background:#7a1616">Critical</span></td>
+  <td>Malicious Mailbox Rule</td>
+  <td>ceo@fictionalcorp.com</td>
+  <td>2026-08-10 03:20:00</td>
+  <td>Inbox rule created with forwarding/redirect behavior -- classic Business Email Compromise staging technique.</td>
+  <td class="evidence">Operation: New-InboxRule
+Parameters: Name=Test-ExternalForward; ForwardTo=external.testaddress@outlook.com; StopProcessingRules=False
+ClientIP: 185.220.101.47</td>
+</tr>
+<tr>
+  <td><span class="sev" style="background:#7a1616">Critical</span></td>
+  <td>Impossible Travel</td>
+  <td>ceo@fictionalcorp.com</td>
+  <td>2026-08-10 08:10:00</td>
+  <td>Sign-in from 'United States' occurred 5.2h after a sign-in from 'Romania' -- implied speed ~1,721 km/h (exceeds 900 km/h threshold).</td>
+  <td class="evidence">prev_location: Romania
+prev_time: 2026-08-10 02:58:00
+cur_location: United States
+cur_time: 2026-08-10 08:10:00
+implied_speed_kmh: 1721.2</td>
+</tr>
+<tr>
+  <td><span class="sev" style="background:#b3401f">High</span></td>
+  <td>New/Unfamiliar Location</td>
+  <td>ceo@fictionalcorp.com</td>
+  <td>2026-08-10 02:58:00</td>
+  <td>Successful sign-in from 'Romania', not seen in the prior 30-day baseline for this user.</td>
+  <td class="evidence">IPAddress: 185.220.101.47
+Location: Romania
+Device: Unknown</td>
+</tr>
+<tr>
+  <td><span class="sev" style="background:#b3401f">High</span></td>
+  <td>Credential Guessing Pattern</td>
+  <td>ceo@fictionalcorp.com</td>
+  <td>2026-08-10 02:58:00</td>
+  <td>6 failed sign-in attempts within 15 minutes immediately preceding a successful authentication.</td>
+  <td class="evidence">failed_attempts: 6
+window_minutes: 15
+success_time: 2026-08-10 02:58:00</td>
+</tr>
+<tr>
+  <td><span class="sev" style="background:#b3821f">Medium</span></td>
+  <td>Off-Hours Sign-In</td>
+  <td>ceo@fictionalcorp.com</td>
+  <td>2026-08-10 02:58:00</td>
+  <td>Successful sign-in at 02:58 local, outside the 06:00-21:00 window.</td>
+  <td class="evidence">hour: 2</td>
+</tr>
+    </tbody>
+  </table>
+</body>
+</html>

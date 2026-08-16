@@ -1,0 +1,3 @@
+TimeGenerated,Operation,UserId,ClientIP,Parameters
+2026-08-10T03:20:00,New-InboxRule,ceo@fictionalcorp.com,185.220.101.47,Name=Test-ExternalForward; ForwardTo=external.testaddress@outlook.com; StopProcessingRules=False
+2026-08-10T09:15:00,Set-InboxRule,analyst1@fictionalcorp.com,10.20.4.9,Name=MoveNewsletters; MoveToFolder=Newsletters

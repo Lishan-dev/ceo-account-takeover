@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEO Account Takeover Investigation — Case File</title>
+<meta name="description" content="A SOC portfolio case study: executive account-takeover investigation using Microsoft Sentinel, KQL, and a working Python detection engine.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E14;
+    --surface:#12161F;
+    --surface-raised:#171C27;
+    --border:#232838;
+    --border-soft:#1B2030;
+    --text:#E7EAF1;
+    --text-muted:#8B93A6;
+    --text-dim:#565D70;
+    --critical:#D14B3E;
+    --high:#E8A23D;
+    --medium:#4F8FD1;
+    --contained:#4FA675;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --display:'Space Grotesk', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--high); color:#100C05;}
+  :focus-visible{outline:2px solid var(--high); outline-offset:3px;}
+
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 0; border-bottom:1px solid var(--border-soft);
+  }
+  .brand{
+    font-family:var(--mono); font-size:13px; color:var(--text-muted);
+    letter-spacing:0.06em; text-transform:uppercase;
+  }
+  .brand strong{color:var(--text); font-weight:600;}
+  .topbar nav a{
+    font-family:var(--mono); font-size:13px; text-decoration:none;
+    color:var(--text-muted); border:1px solid var(--border); padding:7px 14px;
+    border-radius:5px; transition:border-color .15s ease, color .15s ease;
+  }
+  .topbar nav a:hover{color:var(--text); border-color:#3a4258;}
+
+  /* ---------- Hero: incident header ---------- */
+  .hero{padding:64px 0 40px;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12.5px; color:var(--high);
+    letter-spacing:0.12em; text-transform:uppercase; margin:0 0 18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:''; width:7px; height:7px; border-radius:50%;
+    background:var(--high); box-shadow:0 0 0 3px rgba(232,162,61,0.18);
+  }
+  h1{
+    font-family:var(--display); font-weight:700;
+    font-size:clamp(32px, 5vw, 52px); line-height:1.06; letter-spacing:-0.01em;
+    margin:0 0 20px; max-width:14ch;
+  }
+  .synopsis{
+    font-size:17px; color:var(--text-muted); max-width:62ch; margin:0 0 32px;
+  }
+  .synopsis strong{color:var(--text); font-weight:600;}
+
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--border);
+    border-radius:10px; overflow:hidden; background:var(--surface);
+  }
+  .meta-cell{
+    flex:1 1 140px; padding:16px 20px; border-right:1px solid var(--border);
+  }
+  .meta-cell:last-child{border-right:none;}
+  .meta-label{
+    font-family:var(--mono); font-size:10.5px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;
+  }
+  .meta-value{font-family:var(--mono); font-size:14px; font-weight:500;}
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:13px; font-weight:600;
+    padding:3px 9px; border-radius:4px;
+  }
+  .badge.high{background:rgba(232,162,61,0.13); color:var(--high);}
+  .badge.contained{background:rgba(79,166,117,0.13); color:var(--contained);}
+
+  /* ---------- Evidence feed (signature element) ---------- */
+  .feed-section{padding:56px 0 8px;}
+  .section-head{margin-bottom:22px;}
+  .section-head h2{
+    font-family:var(--display); font-size:22px; font-weight:600; margin:0 0 6px;
+  }
+  .section-head p{color:var(--text-muted); font-size:14.5px; margin:0; max-width:60ch;}
+
+  .feed{
+    border:1px solid var(--border); border-radius:10px; overflow:hidden;
+    background:var(--surface);
+  }
+  .feed-row{
+    display:grid;
+    grid-template-columns:96px 200px 1fr 100px;
+    gap:16px; align-items:start;
+    padding:14px 20px; border-bottom:1px solid var(--border-soft);
+    font-family:var(--mono); font-size:13px;
+    opacity:0; transform:translateY(4px);
+    animation:rowIn .5s ease forwards;
+  }
+  .feed-row:last-child{border-bottom:none;}
+  .feed-row:nth-child(1){animation-delay:.05s;}
+  .feed-row:nth-child(2){animation-delay:.15s;}
+  .feed-row:nth-child(3){animation-delay:.25s;}
+  .feed-row:nth-child(4){animation-delay:.35s;}
+  .feed-row:nth-child(5){animation-delay:.45s;}
+  @keyframes rowIn{to{opacity:1; transform:translateY(0);}}
+
+  .sev-tag{
+    font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px;
+    text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap;
+    justify-self:start;
+  }
+  .sev-tag.Critical{background:rgba(209,75,62,0.14); color:var(--critical);}
+  .sev-tag.High{background:rgba(232,162,61,0.14); color:var(--high);}
+  .sev-tag.Medium{background:rgba(79,143,209,0.14); color:var(--medium);}
+
+  .feed-category{color:var(--text); font-weight:500;}
+  .feed-detail{color:var(--text-muted); font-size:12.5px; line-height:1.5;}
+  .feed-time{color:var(--text-dim); text-align:right; font-size:12px;}
+
+  @media (max-width:720px){
+    .feed-row{grid-template-columns:1fr; gap:6px;}
+    .feed-time{text-align:left;}
+  }
+
+  .feed-footer{
+    padding:12px 20px; font-family:var(--mono); font-size:12px; color:var(--text-dim);
+    border-top:1px solid var(--border-soft); background:var(--surface-raised);
+  }
+
+  /* ---------- Entry points ---------- */
+  .entries{padding:64px 0 8px;}
+  .entry-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;
+  }
+  @media (max-width:820px){.entry-grid{grid-template-columns:1fr;}}
+  .entry-card{
+    border:1px solid var(--border); border-radius:10px; padding:24px;
+    background:var(--surface); text-decoration:none; color:var(--text);
+    display:flex; flex-direction:column; gap:14px;
+    transition:border-color .15s ease, transform .15s ease, background .15s ease;
+  }
+  .entry-card:hover{border-color:#3a4258; transform:translateY(-2px); background:var(--surface-raised);}
+  .entry-action{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--high);
+  }
+  .entry-card h3{font-family:var(--display); font-size:18px; margin:0; font-weight:600;}
+  .entry-card p{color:var(--text-muted); font-size:13.5px; margin:0; flex-grow:1;}
+  .entry-arrow{font-family:var(--mono); font-size:13px; color:var(--text-dim);}
+
+  /* ---------- Skills ---------- */
+  .skills{padding:64px 0;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:9px;}
+  .chip{
+    font-family:var(--mono); font-size:12.5px; color:var(--text-muted);
+    border:1px solid var(--border); border-radius:20px; padding:7px 14px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--border-soft); padding:32px 0 48px;
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px;
+    align-items:center;
+  }
+  .footer-note{font-size:12.5px; color:var(--text-dim); max-width:56ch;}
+  footer a{font-family:var(--mono); font-size:13px; text-decoration:none; color:var(--text-muted);}
+  footer a:hover{color:var(--text);}
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">SOC Case File <strong>· CEO Account Takeover</strong></div>
+      <nav><a href="https://github.com/Lishan-dev/ceo-account-takeover" target="_blank" rel="noopener">View source on GitHub ↗</a></nav>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Incident INC-2026-0810 · Detected 03:07 local</p>
+      <h1>CEO Account Takeover Investigation</h1>
+      <p class="synopsis">
+        A simulated executive-account compromise, investigated end to end in
+        <strong>Microsoft Sentinel</strong> — from a 3&nbsp;AM anomalous sign-in through
+        credential-guessing, mailbox access, and a Business-Email-Compromise-staging
+        forwarding rule. Backed by a working Python detection engine that reproduces
+        every finding below from raw log data.
+      </p>
+
+      <div class="meta-row">
+        <div class="meta-cell">
+          <div class="meta-label">Affected identity</div>
+          <div class="meta-value">ceo@fictionalcorp.com</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Severity</div>
+          <div class="meta-value"><span class="badge high">● High</span></div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Status</div>
+          <div class="meta-value"><span class="badge contained">● Contained</span></div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Findings</div>
+          <div class="meta-value">5 confirmed</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="feed-section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Evidence feed</h2>
+        <p>Live output from the detection engine in this repo — real findings, generated from a synthetic log export, not hand-written narrative.</p>
+      </div>
+
+      <div class="feed">
+        <div class="feed-row">
+          <span class="sev-tag Critical">Critical</span>
+          <span class="feed-category">Malicious Mailbox Rule</span>
+          <span class="feed-detail">Inbox rule created with external forwarding (ForwardTo) — classic BEC-staging technique.</span>
+          <span class="feed-time">03:20:00</span>
+        </div>
+        <div class="feed-row">
+          <span class="sev-tag Critical">Critical</span>
+          <span class="feed-category">Impossible Travel</span>
+          <span class="feed-detail">Sign-in from United States 5.2h after a sign-in from Romania — implied speed ~1,721 km/h.</span>
+          <span class="feed-time">08:10:00</span>
+        </div>
+        <div class="feed-row">
+          <span class="sev-tag High">High</span>
+          <span class="feed-category">New/Unfamiliar Location</span>
+          <span class="feed-detail">Successful sign-in from Romania, not seen in the prior 30-day baseline for this user.</span>
+          <span class="feed-time">02:58:00</span>
+        </div>
+        <div class="feed-row">
+          <span class="sev-tag High">High</span>
+          <span class="feed-category">Credential Guessing Pattern</span>
+          <span class="feed-detail">6 failed sign-in attempts within 15 minutes immediately preceding a successful authentication.</span>
+          <span class="feed-time">02:58:00</span>
+        </div>
+        <div class="feed-row">
+          <span class="sev-tag Medium">Medium</span>
+          <span class="feed-category">Off-Hours Sign-In</span>
+          <span class="feed-detail">Successful sign-in at 02:58 local, outside the 06:00–21:00 working-hours window.</span>
+          <span class="feed-time">02:58:00</span>
+        </div>
+        <div class="feed-footer">$ python3 detector.py --signins sample_signins.csv --audit sample_audit.csv --watchlist ceo@fictionalcorp.com</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="entries">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Explore the case file</h2>
+        <p>Three ways into the same investigation, depending on what you want to see.</p>
+      </div>
+      <div class="entry-grid">
+        <a class="entry-card" href="https://github.com/Lishan-dev/ceo-account-takeover/blob/main/docs/case-study.md" target="_blank" rel="noopener">
+          <span class="entry-action">Read</span>
+          <h3>The full investigation</h3>
+          <p>Alert triage, KQL queries, timeline reconstruction, MITRE ATT&amp;CK mapping, containment, and an executive summary.</p>
+          <span class="entry-arrow">docs/case-study.md →</span>
+        </a>
+        <a class="entry-card" href="./tool/report.html" target="_blank" rel="noopener">
+          <span class="entry-action">Run</span>
+          <h3>The detection engine</h3>
+          <p>A working Python tool that turns exported Entra ID/Exchange logs into the findings feed above. Open source, ready to point at real data.</p>
+          <span class="entry-arrow">tool/detector.py →</span>
+        </a>
+        <a class="entry-card" href="https://github.com/Lishan-dev/ceo-account-takeover/blob/main/docs/live-demo-build-guide.md" target="_blank" rel="noopener">
+          <span class="entry-action">Build</span>
+          <h3>Reproduce it live</h3>
+          <p>Step-by-step guide to standing up this exact scenario in a real, free-tier Microsoft Sentinel environment.</p>
+          <span class="entry-arrow">docs/live-demo-build-guide.md →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="skills">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Technical range demonstrated</h2>
+      </div>
+      <div class="chip-row">
+        <span class="chip">SOC alert triage</span>
+        <span class="chip">Microsoft Sentinel</span>
+        <span class="chip">KQL / Kusto</span>
+        <span class="chip">Entra ID sign-in analysis</span>
+        <span class="chip">Threat hunting</span>
+        <span class="chip">MITRE ATT&amp;CK mapping</span>
+        <span class="chip">Incident containment</span>
+        <span class="chip">Python detection engineering</span>
+        <span class="chip">Executive-level reporting</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <p class="footer-note">
+        All identities, IPs, and log data are synthetic. Built as a defensive
+        security portfolio project — detection, investigation, and response only.
+      </p>
+      <a href="https://github.com/Lishan-dev/ceo-account-takeover" target="_blank" rel="noopener">github.com/Lishan-dev/ceo-account-takeover ↗</a>
+    </footer>
+  </div>
+
+</body>
+</html>

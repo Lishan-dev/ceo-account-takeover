@@ -1,0 +1,62 @@
+[
+  {
+    "severity": "Critical",
+    "category": "Malicious Mailbox Rule",
+    "user": "ceo@fictionalcorp.com",
+    "timestamp": "2026-08-10 03:20:00",
+    "detail": "Inbox rule created with forwarding/redirect behavior -- classic Business Email Compromise staging technique.",
+    "evidence": {
+      "Operation": "New-InboxRule",
+      "Parameters": "Name=Test-ExternalForward; ForwardTo=external.testaddress@outlook.com; StopProcessingRules=False",
+      "ClientIP": "185.220.101.47"
+    }
+  },
+  {
+    "severity": "Critical",
+    "category": "Impossible Travel",
+    "user": "ceo@fictionalcorp.com",
+    "timestamp": "2026-08-10 08:10:00",
+    "detail": "Sign-in from 'United States' occurred 5.2h after a sign-in from 'Romania' -- implied speed ~1,721 km/h (exceeds 900 km/h threshold).",
+    "evidence": {
+      "prev_location": "Romania",
+      "prev_time": "2026-08-10 02:58:00",
+      "cur_location": "United States",
+      "cur_time": "2026-08-10 08:10:00",
+      "implied_speed_kmh": 1721.2
+    }
+  },
+  {
+    "severity": "High",
+    "category": "New/Unfamiliar Location",
+    "user": "ceo@fictionalcorp.com",
+    "timestamp": "2026-08-10 02:58:00",
+    "detail": "Successful sign-in from 'Romania', not seen in the prior 30-day baseline for this user.",
+    "evidence": {
+      "IPAddress": "185.220.101.47",
+      "Location": "Romania",
+      "Device": "Unknown"
+    }
+  },
+  {
+    "severity": "High",
+    "category": "Credential Guessing Pattern",
+    "user": "ceo@fictionalcorp.com",
+    "timestamp": "2026-08-10 02:58:00",
+    "detail": "6 failed sign-in attempts within 15 minutes immediately preceding a successful authentication.",
+    "evidence": {
+      "failed_attempts": 6,
+      "window_minutes": 15,
+      "success_time": "2026-08-10 02:58:00"
+    }
+  },
+  {
+    "severity": "Medium",
+    "category": "Off-Hours Sign-In",
+    "user": "ceo@fictionalcorp.com",
+    "timestamp": "2026-08-10 02:58:00",
+    "detail": "Successful sign-in at 02:58 local, outside the 06:00-21:00 window.",
+    "evidence": {
+      "hour": 2
+    }
+  }
+]
