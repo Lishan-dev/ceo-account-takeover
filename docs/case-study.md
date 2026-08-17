@@ -1,7 +1,7 @@
 # CEO Account Takeover Investigation — Microsoft Sentinel
 ### A SOC Portfolio Case Study (Simulated Environment)
 
-> **Disclaimer:** This is a fully simulated investigation built for portfolio/interview purposes. All usernames, IP addresses, domains, timestamps, and log excerpts are fictional. No real breach occurred. All content is defensive in nature (detection, investigation, response, remediation) — no offensive/attack code is included.
+> **Disclaimer:** This is a fully simulated investigation built for portfolio/interview purposes. All usernames, IP addresses, domains, timestamps, and log excerpts are fictional. No real breach occurred. All content is defensive in nature (detection, investigation, response, remediation) - no offensive/attack code is included.
 
 ---
 
